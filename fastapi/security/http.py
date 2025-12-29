@@ -191,15 +191,16 @@ class HTTPBasic(HTTPBase):
             ),
         ] = True,
     ):
+        # Keep public signature backwards compatible but normalize realm to default internally
         self.model = HTTPBaseModel(scheme="basic", description=description)
         self.scheme_name = scheme_name or self.__class__.__name__
-        self.realm = realm
+        # Use a sensible default if realm is not provided
+        self.realm: str = realm or "FastAPI"
         self.auto_error = auto_error
 
     def make_authenticate_headers(self) -> dict[str, str]:
-        if self.realm:
-            return {"WWW-Authenticate": f'Basic realm="{self.realm}"'}
-        return {"WWW-Authenticate": "Basic"}
+        # Always include realm in the challenge header
+        return {"WWW-Authenticate": f'Basic realm="{self.realm}"'}
 
     async def __call__(  # type: ignore
         self, request: Request
